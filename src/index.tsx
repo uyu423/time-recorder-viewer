@@ -1,3 +1,11 @@
+import 'dotenv/config';
+
+if (process.env.RUN_ENV === 'server') {
+  // tslint:disable-next-line: no-var-requires
+  require('newrelic');
+  console.log('RUN_ENV is "server", so execute Newrelic agent.');
+}
+
 import debug from 'debug';
 import http from 'http';
 

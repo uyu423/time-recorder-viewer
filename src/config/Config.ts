@@ -25,7 +25,7 @@ export class ConfigType {
     return uri({
       port: process.env.API_SERVER_PORT,
       protocol: process.env.API_SERVER_PROTOCOL,
-      hostname: process.env.API_SERVER_HOST
+      hostname: process.env.API_SERVER_HOST,
     });
   }
 }
