@@ -298,14 +298,7 @@ export default class GroupContainer extends React.Component<
       return { result: false };
     }
     const { id } = loginUserInfo;
-    const userInfo = this.store.GroupMembers.find(fv => fv.id === id);
-    if (userInfo === undefined) {
-      return { result: false };
-    }
-    if (userInfo.manager === true) {
-      return { id, result: true };
-    }
-    return { result: false };
+    return { id, result: true };
   }
 
   /** start, end를 통해서 이번주가 1주일 안의 기록을 조회한 것이라면 week string을 획득한다 */
@@ -456,6 +449,16 @@ export default class GroupContainer extends React.Component<
               </Button>
             </td>
           ) : null}
+          <td>
+            <Button
+              onClick={e => {
+                e.stopPropagation();
+                window.location.href = `/convert_vacation/${mv.id}`;
+              }}
+            >
+              휴가금고 조회
+            </Button>
+          </td>
         </tr>
       );
     });
@@ -600,7 +603,7 @@ export default class GroupContainer extends React.Component<
                 type="email"
                 id="user_id_input"
                 name="user_id_input"
-                placeholder="slack 멤버 id 혹은 email id 입력"
+                placeholder="slack 멤버 id 입력"
                 innerRef={this.modalEmailRef}
               />
               <InputGroupAddon addonType="append">
@@ -627,9 +630,7 @@ export default class GroupContainer extends React.Component<
                 </Button>
               </InputGroupAddon>
             </InputGroup>
-            <FormText>
-              slack 워크스페이스에서 사용자 id나 email 주소를 확인하세요.
-            </FormText>
+            <FormText>slack 워크스페이스에서 사용자 id를 확인하세요.</FormText>
           </FormGroup>
         </ModalBody>
         <ModalFooter>
@@ -759,7 +760,7 @@ export default class GroupContainer extends React.Component<
                 ) : null}
               </CardHeader>
               <CardBody>
-                <Table responsive={true} className="d-sm-table" hover={true}>
+                <Table responsive={true} className="d-sm-table" hover={false}>
                   <thead className="thead-light">
                     <tr>
                       <th className="text-center">
@@ -773,6 +774,7 @@ export default class GroupContainer extends React.Component<
                       <th>누적 초과시간</th>
                       {isManager.result && isOneWeek ? <th>정산</th> : null}
                       {isManager.result ? <th>X</th> : null}
+                      <th>휴가금고</th>
                     </tr>
                   </thead>
                   <tbody>{rows}</tbody>

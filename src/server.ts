@@ -58,14 +58,11 @@ server.get('/*', async (req, res) => {
       req,
       res,
       routes,
-      assets,
-      // Anything else you add here will be made available
-      // within getInitialProps(ctx)
-      // e.g a redux store...
-      customThing: 'thing'
+      assets
     });
     res.send(html);
   } catch (error) {
+    console.error(error);
     res.json(error);
   }
 });

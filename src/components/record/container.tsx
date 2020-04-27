@@ -1,6 +1,5 @@
 import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
-// import 'normalize.css/normalize.css';
 import '../../styles/style.css';
 
 import debug from 'debug';
@@ -49,7 +48,6 @@ import { Util } from '../../services/util';
 import LoginStore from '../../stores/LoginStore';
 import OverloadStore from '../../stores/OverloadStore';
 import TimeRecordStore from '../../stores/TimeRecordStore';
-import ChartBarStacked from '../chart/bar/Stacked';
 import ChartBarStacked2, {
   IChartBarStacked2Props
 } from '../chart/bar/Stacked2';
@@ -58,7 +56,7 @@ import DefaultHeader from '../common/DefaultHeader';
 import GroupUserAvatar from '../group/user/avatar';
 import { IAfterRequestContext } from '../interface/IAfterRequestContext';
 import RecordButtons from './buttons';
-import { floatButton } from './containerStyle';
+import { floatButton, remoteInfo } from './containerStyle';
 
 const log = debug('trv:recordContainer');
 
@@ -107,7 +105,6 @@ class RecordContainer extends React.Component<
   private loginUserStore: LoginStore;
   private overloadStore: OverloadStore;
 
-  private modalStartDateRef = React.createRef<HTMLInputElement>();
   private modalStartTimeRef = React.createRef<HTMLInputElement>();
   private modalEndDateRef = React.createRef<HTMLInputElement>();
   private modalEndTimeRef = React.createRef<HTMLInputElement>();
@@ -115,7 +112,6 @@ class RecordContainer extends React.Component<
 
   public static async getInitialProps({
     req,
-    res,
     match
   }: IAfterRequestContext<{ user_id: string }>) {
     log(match.params.user_id);
@@ -222,6 +218,7 @@ class RecordContainer extends React.Component<
     this.deleteWorklog = this.deleteWorklog.bind(this);
     this.getModalBody = this.getModalBody.bind(this);
     this.addFuseLog = this.addFuseLog.bind(this);
+    this.useFuseToVacation = this.useFuseToVacation.bind(this);
     this.getFuseModalBody = this.getFuseModalBody.bind(this);
     this.getFuseToVacationModalBody = this.getFuseToVacationModalBody.bind(
       this
@@ -241,12 +238,10 @@ class RecordContainer extends React.Component<
     startDate: moment.Moment | null;
     endDate: moment.Moment | null;
   }) {
-    const updateObj = {
-      ...this.state
-    };
+    const updateObj = {};
     if (!!startDate) {
       updateObj['startDate'] = startDate.toDate();
-      updateObj.focusedInput = 'endDate';
+      updateObj['focusedInput'] = 'endDate';
     }
     if (!!endDate) {
       updateObj['endDate'] = endDate.toDate();
@@ -254,13 +249,16 @@ class RecordContainer extends React.Component<
     this.setState(updateObj);
   }
 
-  public async handleClosePopover() {
-    if (this.store.isIdle === true) {
-      await this.store.findTimeRecord(
-        this.props.userId,
-        moment(this.state.startDate).format('YYYY-MM-DD'),
-        moment(this.state.endDate).format('YYYY-MM-DD')
-      );
+  public handleClosePopover() {
+    if (this.store.IsIdle === true) {
+      this.setState(state => {
+        this.store.findTimeRecord(
+          this.props.userId,
+          moment(state.startDate).format('YYYY-MM-DD'),
+          moment(state.endDate).format('YYYY-MM-DD')
+        );
+        return state;
+      });
     }
   }
 
@@ -340,7 +338,7 @@ class RecordContainer extends React.Component<
                 </div>
               </Col>
               <Col md={true} className="mb-sm-2 mb-0">
-                <div className="callout callout-danger">
+                <div className="callout callout-info">
                   <div className="text-muted">{overTimeStr}</div>
                   <div>초과근무시간</div>
                 </div>
@@ -352,19 +350,19 @@ class RecordContainer extends React.Component<
                 </div>
               </Col>
               <Col md={true} className="mb-sm-2 mb-0">
-                <div className="callout callout-info">
+                <div className={`callout ${remoteInfo}`}>
                   <div className="text-muted">{totalRemoteTimeStr}</div>
                   <div>재택근무시간</div>
                 </div>
               </Col>
               <Col md={true} className="mb-sm-2 mb-0">
-                <div className="callout callout-warning">
+                <div className="callout callout-danger">
                   <div className="text-muted">{totalEmergencyTimeStr}</div>
                   <div>긴급대응시간</div>
                 </div>
               </Col>
               <Col md={true} className="mb-sm-2 mb-0">
-                <div className="callout callout-info">
+                <div className="callout callout-warning">
                   <div className="text-muted">{totalRestTimeStr}</div>
                   <div>휴식시간</div>
                 </div>
@@ -477,32 +475,31 @@ class RecordContainer extends React.Component<
     const userInfo = this.loginUserStore.UserInfo;
     const loginUserInfo = this.loginUserStore.LoginUserInfo;
     // 자신의 데이터 이거나 관리자 일때만 modal open한다.
-    if (!!userInfo && !!loginUserInfo) {
-      if (!!loginUserInfo.auth && data.type !== EN_WORK_TYPE.FUSEOVERLOAD) {
-        // 관리자는 하고 싶은거 다해~ 대신 차감만 못건드려. 이건 민감하거든 :)
-        this.setState({
-          ...this.state,
-          isModalOpen: true,
-          isFuseModalOpen: false,
-          isFuseToVacationModalOpen: false,
-          fuseHours: luxon.Duration.fromObject({ hours: 0 }),
-          updateData: { key, data }
-        });
-      } else if (
-        this.props.userId === userInfo.id &&
-        data.type !== EN_WORK_TYPE.FUSEOVERLOAD
-      ) {
-        // 자신의 데이터는 금주의 데이터 && 자신의 데이터 && 차감이 아닐 때
-        this.setState({
-          ...this.state,
-          isModalOpen: true,
-          isFuseModalOpen: false,
-          isFuseToVacationModalOpen: false,
-          fuseHours: luxon.Duration.fromObject({ hours: 0 }),
-          updateData: { key, data }
-        });
+    if (
+      !!userInfo && // 사용자 정보 확인
+      !!loginUserInfo && // 로그인 사용자 정보 확인
+      (!!loginUserInfo.auth || this.props.userId === userInfo.id) // 관리자 혹은 자신의 데이터인지 확인
+    ) {
+      if (data.type !== EN_WORK_TYPE.FUSEOVERLOAD) {
+        // FUSEOVERLOAD가 아니면 실행
+        this.openDeleteWorklogModal(key, data);
+      }
+      // FUSEOVERLOAD 라도 fuseKey가 있으면 실행
+      if (data.type === EN_WORK_TYPE.FUSEOVERLOAD && !!data.fuseKey) {
+        this.openDeleteWorklogModal(key, data);
       }
     }
+  }
+
+  private openDeleteWorklogModal(key: string, data: ITimeRecordLogData) {
+    this.setState({
+      ...this.state,
+      isModalOpen: true,
+      isFuseModalOpen: false,
+      isFuseToVacationModalOpen: false,
+      fuseHours: luxon.Duration.fromObject({ hours: 0 }),
+      updateData: { key, data }
+    });
   }
 
   public getSingleDayElement() {
@@ -613,7 +610,8 @@ class RecordContainer extends React.Component<
         VACATION: true,
         HALFVACATION: true,
         FUSEOVERLOAD: true,
-        FUSEOVERLOAD_VACATION: true
+        FUSEOVERLOAD_VACATION: true,
+        USE_FUSE_VACATION: true
       };
       return (
         <RecordButtons
@@ -666,7 +664,8 @@ class RecordContainer extends React.Component<
       VACATION: true,
       HALFVACATION: true,
       FUSEOVERLOAD: true,
-      FUSEOVERLOAD_VACATION: true
+      FUSEOVERLOAD_VACATION: true,
+      USE_FUSE_VACATION: true
     };
     if (this.isOneDay === false) {
       return returnValue;
@@ -731,6 +730,31 @@ class RecordContainer extends React.Component<
           updateData: undefined,
           fuseHours: luxon.Duration.fromObject({ hours: 0 })
         });
+        return;
+      }
+      if (type === EN_WORK_TYPE.USE_FUSE_VACATION) {
+        // 차감시간으로 만들어둔 휴가를 사용한다.
+        if (
+          confirm(
+            `휴가금고는 초과근무시간을 10:1로 바꿔놓은 휴가를 사용하는 기능입니다. 사용 시 하루(1일 - 8H) 근무를 대체하는 휴가와 동등하게 계산됩니다.\n사용할까요?`
+          )
+        ) {
+          const resp = await this.overloadStore.useFuseToVacation(
+            Auth.loginUserTokenKey,
+            this.props.userId,
+            luxon.DateTime.fromJSDate(this.state.startDate)
+          );
+          if (resp.result === false) {
+            alert('휴가금고 사용에 실패했습니다.');
+          }
+          if (resp.result === true) {
+            await this.store.findTimeRecord(
+              this.props.userId,
+              moment(this.state.startDate).format('YYYY-MM-DD'),
+              moment(this.state.endDate).format('YYYY-MM-DD')
+            );
+          }
+        }
         return;
       }
       // 차감 메뉴 외에는 아래에서 처리한다.
@@ -858,12 +882,16 @@ class RecordContainer extends React.Component<
     // 삭제 진행!
     const data = deleteData.data;
     // done 업데이트 여부 결정
-    if (data.type !== EN_WORK_TYPE.FUSEOVERLOAD) {
+    if (
+      data.type !== EN_WORK_TYPE.FUSEOVERLOAD ||
+      (data.type === EN_WORK_TYPE.FUSEOVERLOAD && !!data.fuseKey)
+    ) {
       await this.store.deleteTimeRecord(
         Auth.loginUserTokenKey!,
         this.loginUserStore.UserInfo!.id,
         luxon.DateTime.fromJSDate(this.state.startDate),
-        deleteData.key
+        deleteData.key,
+        data.fuseKey
       );
     }
     this.setState({ ...this.state, isModalOpen: false, updateData: undefined });
@@ -964,6 +992,7 @@ class RecordContainer extends React.Component<
               placeholder="time"
               defaultValue={startTime}
               innerRef={this.modalStartTimeRef}
+              disabled={data.type === EN_WORK_TYPE.FUSEOVERLOAD}
             />
           </FormGroup>
           {doneElement}
@@ -972,7 +1001,11 @@ class RecordContainer extends React.Component<
           <Button color="danger" onClick={this.deleteWorklog}>
             삭제
           </Button>
-          <Button color="success" onClick={this.saveWorklog}>
+          <Button
+            color="success"
+            disabled={data.type === EN_WORK_TYPE.FUSEOVERLOAD}
+            onClick={this.saveWorklog}
+          >
             저장
           </Button>
           <Button
@@ -1044,6 +1077,29 @@ class RecordContainer extends React.Component<
     await this.overloadStore.findAllFuseOverload(userId);
   }
 
+  public async useFuseToVacation() {
+    if (this.state.isServer === true || Auth.loginUserTokenKey === null) {
+      return;
+    }
+
+    const targetDate = luxon.DateTime.fromJSDate(this.state.startDate);
+    const userId = this.props.userId;
+    // 사용 기록 추가
+    await this.overloadStore.useFuseToVacation(
+      Auth.loginUserTokenKey,
+      userId,
+      targetDate
+    );
+
+    // 데이터 갱신
+    await this.store.findTimeRecord(
+      this.props.userId,
+      moment(this.state.startDate).format('YYYY-MM-DD'),
+      moment(this.state.endDate).format('YYYY-MM-DD')
+    );
+    await this.overloadStore.findAllFuseOverload(userId);
+  }
+
   public getFuseModalBody() {
     const totalRemain = this.overloadStore.totalRemain();
     const haveFuseData = !!this.overloadStore.Records && !!totalRemain;
@@ -1058,6 +1114,20 @@ class RecordContainer extends React.Component<
               사용가능한 시간 {totalRemainTime}
             </li>
             <li className="list-group-item">
+              <Button
+                onClick={() => {
+                  this.addFuseTime(luxon.Duration.fromObject({ minutes: 1 }));
+                }}
+              >
+                +00:01 추가
+              </Button>
+              <Button
+                onClick={() => {
+                  this.addFuseTime(luxon.Duration.fromObject({ minutes: 10 }));
+                }}
+              >
+                +00:10 추가
+              </Button>
               <Button
                 onClick={() => {
                   this.addFuseTime(luxon.Duration.fromObject({ minutes: 30 }));
@@ -1278,11 +1348,11 @@ class RecordContainer extends React.Component<
                   orientation="vertical"
                   focusedInput={this.state.focusedInput}
                   onDatesChange={this.onDatesChangeForDRP}
-                  onFocusChange={focusedInput =>
-                    this.setState({ ...this.state, focusedInput })
-                  }
+                  onFocusChange={focusedInput => {
+                    this.setState({ focusedInput });
+                  }}
                   minimumNights={0}
-                  isOutsideRange={day => false}
+                  isOutsideRange={() => false}
                   onClose={this.handleClosePopover}
                   noBorder={true}
                   block={true}

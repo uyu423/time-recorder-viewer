@@ -407,7 +407,7 @@ export default class CoffeeDetailContainer extends React.Component<
       this.detailStore.Orders.size > 0 &&
       this.props.users.length > 0
     ) {
-      const returnElements: Array<React.ReactElement<OrderItem>> = [];
+      const returnElements: Array<React.ReactElement<any>> = [];
       this.detailStore.Orders.forEach((orders, key) => {
         const userIds = orders.map(mv => mv.guest_id);
         const isMine =
@@ -474,7 +474,12 @@ export default class CoffeeDetailContainer extends React.Component<
       return null;
     }
     const isClosed = this.isClosed();
-    if (isClosed === false) {
+    if (
+      isClosed === false &&
+      Util.isNotEmpty(this.props.info) &&
+      Util.isNotEmpty(this.loginUserStore.UserInfo) &&
+      this.props.info.owner_id === this.loginUserStore.UserInfo.id
+    ) {
       return [
         <Button
           key="holo"
@@ -488,7 +493,9 @@ export default class CoffeeDetailContainer extends React.Component<
           key="close_btn"
           color="danger"
           onClick={async () => {
-            await this.detailStore.closeEvent();
+            if (confirm('주문을 마감하시겠습니까?')) {
+              await this.detailStore.closeEvent();
+            }
           }}
         >
           주문 마감
@@ -527,7 +534,7 @@ export default class CoffeeDetailContainer extends React.Component<
 
   private async addBeverage() {
     const result = await this.detailStore.addBeverage(this.state.searchText);
-    if (result !== null) {
+    if (result) {
       const updateState = { ...this.state };
       updateState.matchBeverages.push(result);
       this.setState(updateState);

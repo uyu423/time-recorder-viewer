@@ -7,12 +7,10 @@ import {
   Card,
   CardBody,
   CardGroup,
-  CardHeader,
   Col,
   Container,
   Row
 } from 'reactstrap';
-
 import {
   appTokenKey,
   firebaseAuthKey,
@@ -98,6 +96,12 @@ class Login extends Component {
               if (returnUrl === DEFAULT_PAGE) {
                 returnUrl = `/records/${result.data.userKey}`;
               }
+            }
+            // 가입이 실패했는지 확인한다.
+            if (returnUrl === DEFAULT_PAGE && !!result.data.userKey === false) {
+              alert(
+                '회원 가입이 실패했습니다. 잠시 후 재시도하시거나 관리자에게 문의해주세요.'
+              );
             }
             window.location.href = returnUrl;
           });

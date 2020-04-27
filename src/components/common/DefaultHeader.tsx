@@ -83,6 +83,13 @@ class DefaultHeader extends React.Component<
           </DropdownItem>
           <DropdownItem
             onClick={() => {
+              window.location.href = `/convert_vacation/${userInfo!.id}`;
+            }}
+          >
+            휴가금고 확인
+          </DropdownItem>
+          <DropdownItem
+            onClick={() => {
               window.location.href = `/queue/add/${userInfo!.id}`;
             }}
           >
@@ -90,10 +97,10 @@ class DefaultHeader extends React.Component<
           </DropdownItem>
           <DropdownItem
             onClick={() => {
-              window.location.href = '/queue';
+              window.location.href = `/user/${userInfo!.id}`;
             }}
           >
-            🛎저기요
+            🤔 내정보 확인
           </DropdownItem>
         </>
       );
@@ -151,7 +158,7 @@ class DefaultHeader extends React.Component<
                   </span>
                 )}
               </DropdownToggle>
-              <DropdownMenu right={true} style={{ right: 'auto' }}>
+              <DropdownMenu right={true}>
                 {todayMenu}
                 <DropdownItem onClick={this.onClickLogin}>
                   {this.props.isLogin === true ? ' Logout' : ' Login'}

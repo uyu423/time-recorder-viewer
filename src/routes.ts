@@ -8,13 +8,20 @@ import Login from './components/login';
 import QueueAddContainer from './components/queue/addContainer';
 import QueueFindContainer from './components/queue/find/container';
 import RecordContainer from './components/record/container';
+import RecordFuseVacationContainer from './components/record/fuse_vacation/container';
 import RecordOverloadContainer from './components/record/overload/container';
+import UserContainer from './components/user/container';
 
 export default [
   {
     path: '/',
     exact: true,
     component: HomeContainer
+  },
+  {
+    path: '/user/:user_id',
+    exact: true,
+    component: UserContainer
   },
   {
     path: '/records/:user_id', // 개인 로그 등록 및 살펴보기
@@ -56,6 +63,12 @@ export default [
     exact: true,
     component: RecordOverloadContainer
   },
+  {
+    path: '/convert_vacation/:user_id', // 특정 개인의 휴가금고 확인
+    exact: true,
+    component: RecordFuseVacationContainer
+  },
+
   {
     path: '/coffeebreak',
     exact: true,
