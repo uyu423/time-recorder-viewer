@@ -9,7 +9,8 @@
     "build": "razzle build",
     "test": "razzle test --env=jsdom",
     "start": "NODE_ENV=production node ./build/server.js",
-    "start:onlinux": "npm run build && NODE_ENV=production pm2 start build/server.js -i 2 --name YAWORK_WEB",
+    "start:onlinux": "npx pm2 stop YAWORK_WEB && NODE_ENV=production npx pm2 start build/server.js -i 2 --name YAWORK_WEB",
+    "prestart:onlinux": "npm install && npm run build",
     "dist": "node dist.js",
     "lint": "tslint -c tslint.json \"src/**/*.ts*\""
   },
