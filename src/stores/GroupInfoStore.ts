@@ -48,11 +48,7 @@ export default class GroupInfoStore {
   }
 
   @action
-  public async deleteGroup({
-    group_id
-  }: {
-    group_id: string;
-  }): Promise<boolean> {
+  public async deleteGroup(groupId: string, groupName: string, initiator: string): Promise<boolean> {
     if (this.isLoading === true) {
       return false;
     }
@@ -63,9 +59,7 @@ export default class GroupInfoStore {
       const trRb = new GroupRequestBuilder(rbParam);
       const trAction = new Group(trRb);
 
-      const result = await trAction.deleteGroup({
-        group_id
-      });
+      const result = await trAction.deleteGroup(groupId, groupName, initiator);
 
       return runInAction(() => {
         this.isLoading = false;
