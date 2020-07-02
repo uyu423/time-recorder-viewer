@@ -75,15 +75,14 @@ export class GroupController {
   public async deleteGroup(req: Request): Promise<TControllerResp<boolean>> {
     const rbParam: RequestBuilderParams = { baseURI: Config.getApiURI() };
     const { group_id } = req.params;
+    const { group_name, initiator } = req.body;
 
     log(group_id);
 
     const rb = new GroupRequestBuilder(rbParam);
     const findAction = new Group(rb);
 
-    const actionResp = await findAction.deleteGroup({
-      group_id
-    });
+    const actionResp = await findAction.deleteGroup(group_id, group_name, initiator);
 
     return {
       status: actionResp.type === EN_REQUEST_RESULT.ERROR ? 400 : 200,

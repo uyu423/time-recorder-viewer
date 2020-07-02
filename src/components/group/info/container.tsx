@@ -137,9 +137,11 @@ export default class GroupInfoContainer extends React.Component<
                   color="danger"
                   onClick={async () => {
                     if (confirm(`${mv.desc} 그룹을 삭제하시겠습니까?`)) {
-                      const resp = await this.gropInfostore.deleteGroup({
-                        group_id: mv.group_id
-                      });
+                      const resp = await this.gropInfostore.deleteGroup(
+                        mv.group_id,
+                        mv.name,
+                        this.loginUserStore.LoginUserInfo?.email || 'no LoginUserInfo'
+                      );
                       if (resp) {
                         alert('그룹 삭제 완료.');
                         await this.gropInfostore.findAllGroupInfos();

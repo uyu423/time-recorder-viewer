@@ -80,11 +80,15 @@ export class Group {
     return { type: EN_REQUEST_RESULT.SUCCESS, data: result.payload };
   }
 
-  public async deleteGroup(args: { group_id: string }) {
+  public async deleteGroup(groupId: string, groupName: string, initiator: string) {
     const query = this.rb.deleteGroupQuery({
       method: 'DELETE',
+      body: {
+        initiator,
+        group_name: groupName
+      },
       resources: {
-        group_id: args.group_id
+        group_id: groupId
       },
       headers: {}
     });

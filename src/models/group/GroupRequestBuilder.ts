@@ -71,6 +71,7 @@ export class GroupRequestBuilder extends RequestBuilder {
   }
 
   public deleteGroupQuery({
+    body: data,
     method,
     resources
   }: RequestParams<{ group_id: string }>): IAxiosRequesterConfig {
@@ -82,6 +83,7 @@ export class GroupRequestBuilder extends RequestBuilder {
       headers: {
         ...this.AccessTokenObject
       },
+      data,
       timeout: 20000,
       url: endPoint
     };
