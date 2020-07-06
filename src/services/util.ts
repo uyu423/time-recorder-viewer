@@ -81,6 +81,19 @@ export class Util {
     const totalWorkTimeObj = this.reduceTimeObj(timeObj, target);
     return luxon.Duration.fromObject(totalWorkTimeObj);
   }
+
+  public static overMilliseconds(records: IOverWork[] = []): number {
+    return (records.reduce((acc, cur) => (acc + cur.over?.['milliseconds']), 0));
+  }
+
+  public static usedMilliseconds(fuseRecords: IFuseOverWork[] = []): number {
+    return (fuseRecords.reduce((acc, cur) => {
+      const duration = luxon.Duration.fromISO(cur.use);
+
+      return acc + (duration.hours * 60 + duration.minutes) * 60000;
+    }, 0));;
+  }
+
   public static totalRemain(
     records: IOverWork[],
     fuseRecords: IFuseOverWork[]
@@ -89,14 +102,7 @@ export class Util {
       return null;
     }
 
-    const overMilliseconds = (records.reduce((acc, cur) => (acc + cur.over?.['milliseconds']), 0));
-    const usedMilliseconds = (fuseRecords.reduce((acc, cur) => {
-      const duration = luxon.Duration.fromISO(cur.use);
-
-      return acc + (duration.hours * 60 + duration.minutes) * 60000;
-    }, 0));
-
-    return overMilliseconds - usedMilliseconds;
+    return this.overMilliseconds(records) - this.usedMilliseconds(fuseRecords);
   }
 
   public static isEmpty<T>(

@@ -48,22 +48,25 @@ export default class OverloadStore {
     return this.isLoading === false;
   }
 
+  public getMilisToString(millis: number | null): string {
+
+    if (!millis) {
+      return '-';
+    }
+
+    if (millis > 0) {
+      return (luxon.Duration.fromMillis(millis).toFormat('hh:mm:ss'));
+    }
+
+    return `-${luxon.Duration.fromMillis(Math.abs(millis)).toFormat('hh:mm:ss')}`;
+  }
+
   public totalRemain(): number | null {
     return Util.totalRemain(this.records, this.fuseRecords);
   }
 
-  public getTimeObjectToString(): string {
-    const totalRemain = this.totalRemain();
-
-    if (!totalRemain) {
-      return '-';
-    }
-
-    if (totalRemain > 0) {
-      return (luxon.Duration.fromMillis(totalRemain).toFormat('hh:mm:ss'));
-    }
-
-    return `-${luxon.Duration.fromMillis(Math.abs(totalRemain)).toFormat('hh:mm:ss')}`;
+  public getTotalRemainString(): string {
+    return this.getMilisToString(this.totalRemain());
   }
 
   @action
