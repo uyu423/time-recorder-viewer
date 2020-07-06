@@ -1,6 +1,7 @@
 import '@coreui/icons/css/coreui-icons.min.css';
 import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
+
 // import 'normalize.css/normalize.css';
 import '../../styles/style.css';
 
@@ -82,8 +83,8 @@ const log = debug('trv:GroupContainer');
 
 @observer
 export default class GroupContainer extends React.Component<
-  IGroupContainerProps,
-  TStates
+IGroupContainerProps,
+TStates
 > {
   private store: GroupStore;
   private loginUserStore: LoginStore;
@@ -277,15 +278,12 @@ export default class GroupContainer extends React.Component<
     }
   }
 
-  public getTimeObjectToString(totalRemainDurationObj: luxon.DurationObject) {
-    let duration = luxon.Duration.fromObject(totalRemainDurationObj);
-    const milliseconds = duration.as('milliseconds');
-    if (milliseconds < 0) {
-      duration = luxon.Duration.fromMillis(Math.abs(milliseconds));
+  public getTimeObjectToString(currentUsableOverMillis: number) {
+    if (currentUsableOverMillis > 0) {
+      return (luxon.Duration.fromMillis(currentUsableOverMillis).toFormat('hh:mm:ss'));
     }
-    return milliseconds < 0
-      ? `-${duration.toFormat('hh:mm:ss')}`
-      : duration.toFormat('hh:mm:ss');
+
+    return `-${luxon.Duration.fromMillis(Math.abs(currentUsableOverMillis)).toFormat('hh:mm:ss')}`;
   }
 
   public isManager(): { result: boolean; id?: string } {
@@ -333,17 +331,17 @@ export default class GroupContainer extends React.Component<
       const convertData =
         !!this.store.Records[mv.id] && this.store.Records[mv.id].length > 0
           ? TimeRecord.convertWorkTime(
-              this.store.Records[mv.id],
-              this.state.startDate,
-              this.state.endDate,
-              holidaysDuration
-            )
+            this.store.Records[mv.id],
+            this.state.startDate,
+            this.state.endDate,
+            holidaysDuration
+          )
           : {
-              updateDatas: null,
-              overTimeObj: null,
-              calWorkTimeStr: 'none',
-              overTimeStr: 'none'
-            };
+            updateDatas: null,
+            overTimeObj: null,
+            calWorkTimeStr: 'none',
+            overTimeStr: 'none'
+          };
       const lastActive =
         !!convertData.updateDatas && convertData.calWorkTimeStr !== 'none'
           ? convertData.updateDatas[convertData.updateDatas.length - 1].name
@@ -364,15 +362,15 @@ export default class GroupContainer extends React.Component<
         totalRemain === null ? (
           '-'
         ) : (
-          <Button
-            onClick={e => {
-              e.stopPropagation();
-              window.location.href = `/overload/${mv.id}`;
-            }}
-          >
-            {totalRemainStr}
-          </Button>
-        );
+            <Button
+              onClick={e => {
+                e.stopPropagation();
+                window.location.href = `/overload/${mv.id}`;
+              }}
+            >
+              {totalRemainStr}
+            </Button>
+          );
       const settlementBtn = ((user: IUserInfo) => {
         if (!isManager.result || !isOneWeek) {
           return null;
@@ -617,7 +615,7 @@ export default class GroupContainer extends React.Component<
                     if (result === false) {
                       alert(
                         `${
-                          this.modalEmailRef.current!.value
+                        this.modalEmailRef.current!.value
                         } 을/를 찾을 수 없습니다.`
                       );
                     } else {

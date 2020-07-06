@@ -67,8 +67,8 @@ interface FormValues {
 
 @observer
 class RecordOverloadContainer extends React.Component<
-  IRecordOverloadContainerProps,
-  IRecordOverloadContainerStates
+IRecordOverloadContainerProps,
+IRecordOverloadContainerStates
 > {
   private overloadStore: OverloadStore;
   private loginUserStore: LoginStore;
@@ -146,7 +146,6 @@ class RecordOverloadContainer extends React.Component<
     this.getTotalFuseOverTime = this.getTotalFuseOverTime.bind(this);
     this.getOverTimeRows = this.getOverTimeRows.bind(this);
     this.getFuseOverTimeRows = this.getFuseOverTimeRows.bind(this);
-    this.getRemainTimes = this.getRemainTimes.bind(this);
     this.handleClickRow = this.handleClickRow.bind(this);
     this.isAdmin = this.isAdmin.bind(this);
 
@@ -298,8 +297,8 @@ class RecordOverloadContainer extends React.Component<
                           this.props.userId !== null
                             ? this.props.userId
                             : this.loginUserStore.UserInfo
-                            ? this.loginUserStore.UserInfo.id
-                            : 'none',
+                              ? this.loginUserStore.UserInfo.id
+                              : 'none',
                         week: mv.week,
                         manager_id: this.loginUserStore.LoginUserInfo?.id
                       });
@@ -343,6 +342,12 @@ class RecordOverloadContainer extends React.Component<
       return null;
     }
 
+    console.log(this.overloadStore.FuseRecords.reduce((acc, cur) => {
+      const duration = luxon.Duration.fromISO(cur.use);
+
+      return acc + duration.hours * 60 + duration.minutes;
+    }, 0))
+
     return this.overloadStore.FuseRecords.sort((a, b) =>
       a.date > b.date ? -1 : 1
     ).map(mv => {
@@ -350,6 +355,7 @@ class RecordOverloadContainer extends React.Component<
       const useDate = luxon.DateTime.fromFormat(date, 'yyyyLLdd');
       const useDateStr = useDate.toFormat('yyyy-LL-dd');
       const duration = luxon.Duration.fromISO(use);
+
       const durationStr = duration.toFormat('hh:mm:ss');
       const noteStr = Util.isNotEmpty(note) ? note : '-';
       return (
@@ -360,27 +366,6 @@ class RecordOverloadContainer extends React.Component<
         </tr>
       );
     });
-  }
-
-  public getRemainTimes() {
-    if (this.overloadStore === null) {
-      return '-';
-    }
-    const totalRemainDurationObj = this.overloadStore.totalRemain();
-    if (totalRemainDurationObj === null) {
-      return '-';
-    }
-    if (Object.keys(totalRemainDurationObj).length <= 0) {
-      return '-';
-    }
-    let duration = luxon.Duration.fromObject(totalRemainDurationObj);
-    const milliseconds = duration.as('milliseconds');
-    if (milliseconds < 0) {
-      duration = luxon.Duration.fromMillis(Math.abs(milliseconds));
-    }
-    return milliseconds < 0
-      ? `-${duration.toFormat('hh:mm:ss')}`
-      : duration.toFormat('hh:mm:ss');
   }
 
   public handleClickRow(week: string) {
@@ -447,7 +432,7 @@ class RecordOverloadContainer extends React.Component<
   }
 
   public render() {
-    const totalRemainTime = this.getRemainTimes();
+    const totalRemainTime = this.overloadStore.getTimeObjectToString();
     const avatar = this.getAvatar(totalRemainTime);
     const isAdmin = this.isAdmin();
     const rows = this.getOverTimeRows();

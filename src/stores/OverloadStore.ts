@@ -48,17 +48,22 @@ export default class OverloadStore {
     return this.isLoading === false;
   }
 
-  public totalRemain(): luxon.DurationObject | null {
+  public totalRemain(): number | null {
     return Util.totalRemain(this.records, this.fuseRecords);
   }
 
-  public totalRemainTime(format: string = 'hh:mm:ss'): string {
-    const totalTime = this.totalRemain();
-    if (totalTime === null) {
-      return '';
+  public getTimeObjectToString(): string {
+    const totalRemain = this.totalRemain();
+
+    if (!totalRemain) {
+      return '-';
     }
-    const duration = luxon.Duration.fromObject(totalTime);
-    return duration.toFormat(format);
+
+    if (totalRemain > 0) {
+      return (luxon.Duration.fromMillis(totalRemain).toFormat('hh:mm:ss'));
+    }
+
+    return `-${luxon.Duration.fromMillis(Math.abs(totalRemain)).toFormat('hh:mm:ss')}`;
   }
 
   @action

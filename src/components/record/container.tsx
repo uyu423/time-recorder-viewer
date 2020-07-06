@@ -1,5 +1,6 @@
 import 'react-dates/initialize';
 import 'react-dates/lib/css/_datepicker.css';
+
 import '../../styles/style.css';
 
 import debug from 'debug';
@@ -98,8 +99,8 @@ interface IetcStates {
 
 @observer
 class RecordContainer extends React.Component<
-  IRecordContainerProps,
-  IRecordContainerStates & IetcStates
+IRecordContainerProps,
+IRecordContainerStates & IetcStates
 > {
   private store: TimeRecordStore;
   private loginUserStore: LoginStore;
@@ -1106,7 +1107,7 @@ class RecordContainer extends React.Component<
     const duration = this.state.fuseHours;
     let message = <Label>추가 근무 기록이 없습니다.</Label>;
     if (haveFuseData === true) {
-      const totalRemainTime = this.overloadStore.totalRemainTime();
+      const totalRemainTime = this.overloadStore.getTimeObjectToString();
       message = (
         <>
           <ul className="list-group list-group-flush">
@@ -1203,10 +1204,8 @@ class RecordContainer extends React.Component<
     // 총 시간보다 더 큰지 확인해야한다.
     const duration = update.normalize();
     const addMaxDuration = luxon.Duration.fromISO('PT6H');
-    const totalRemainDuration = luxon.Duration.fromObject(
-      totalRemain
-    ).normalize();
-    if (duration > totalRemainDuration) {
+
+    if (duration.as('milliseconds') > totalRemain) {
       alert('차감 가능한 시간을 초과한 입력입니다.');
       return;
     }
@@ -1220,14 +1219,12 @@ class RecordContainer extends React.Component<
   public getFuseToVacationModalBody() {
     const totalRemain = this.overloadStore.totalRemain();
     const haveFuseData =
-      !!this.overloadStore.Records &&
-      !!totalRemain &&
-      luxon.Duration.fromObject(totalRemain) > luxon.Duration.fromISO('PT10H');
-    const totalRemainTime = this.overloadStore.totalRemainTime();
+      !!this.overloadStore.Records && totalRemain && totalRemain > 0
+    const totalRemainTime = this.overloadStore.getTimeObjectToString();
     let message = (
       <Label>{`추가 근무 기록이 없거나 10시간보다 부족합니다. ${totalRemainTime}`}</Label>
     );
-    if (haveFuseData === true) {
+    if (haveFuseData) {
       message = (
         <>
           <ul className="list-group list-group-flush">
