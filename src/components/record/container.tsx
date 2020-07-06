@@ -1219,7 +1219,7 @@ IRecordContainerStates & IetcStates
   public getFuseToVacationModalBody() {
     const totalRemain = this.overloadStore.totalRemain();
     const haveFuseData =
-      !!this.overloadStore.Records && totalRemain && totalRemain > 0
+      !!this.overloadStore.Records && totalRemain && totalRemain > 0;
     const totalRemainTime = this.overloadStore.getTotalRemainString();
     let message = (
       <Label>{`추가 근무 기록이 없거나 10시간보다 부족합니다. ${totalRemainTime}`}</Label>
