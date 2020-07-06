@@ -1,7 +1,7 @@
 import '../../../styles/style.css';
 
 import debug from 'debug';
-import { Field, Form, Formik, FormikActions, FormikProps } from 'formik';
+import { Field, Form, Formik, FormikProps } from 'formik';
 import * as luxon from 'luxon';
 import { observer } from 'mobx-react';
 import React from 'react';
@@ -399,7 +399,7 @@ IRecordOverloadContainerStates
   }
 
   public render() {
-    const totalRemainTime = this.overloadStore.getTimeObjectToString();
+    const totalRemainTime = this.overloadStore.getTotalRemainString();
     const avatar = this.getAvatar(totalRemainTime);
     const isAdmin = this.isAdmin();
     const rows = this.getOverTimeRows();
@@ -448,7 +448,7 @@ IRecordOverloadContainerStates
             </Card>
             <Card>
               <CardHeader>
-                <h2>누적된 초과 근무</h2>
+                <h2>누적된 초과 근무 {this.overloadStore.getMilisToString(Util.overMilliseconds(this.overloadStore.Records))}</h2>
               </CardHeader>
               <CardBody>
                 {calSpecificWeekBtn}
@@ -467,7 +467,7 @@ IRecordOverloadContainerStates
             </Card>
             <Card>
               <CardHeader>
-                <h2>사용한 초과 근무</h2>
+                <h2>사용한 초과 근무 {this.overloadStore.getMilisToString(Util.usedMilliseconds(this.overloadStore.FuseRecords))}</h2>
               </CardHeader>
               <CardBody>
                 <Table responsive={true} className="d-sm-table">
