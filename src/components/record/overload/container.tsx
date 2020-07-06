@@ -199,9 +199,7 @@ IRecordOverloadContainerStates
       return luxon.Duration.fromMillis(0);
     }
 
-    return this.overloadStore.FuseRecords.sort((a, b) =>
-      a.date > b.date ? -1 : 1
-    ).reduce((acc, cur) => {
+    return this.overloadStore.FuseRecords.reduce((acc, cur) => {
       const duration = luxon.Duration.fromISO(cur.use);
       return acc.plus(duration);
     }, luxon.Duration.fromMillis(0));
@@ -214,33 +212,10 @@ IRecordOverloadContainerStates
 
     const isAdmin = this.isAdmin();
 
-    let totalFuseOverTime = this.getTotalFuseOverTime();
-    const zeroDuration = luxon.Duration.fromMillis(0);
-
-    return this.overloadStore.Records.sort((a, b) => (a.week < b.week ? -1 : 1))
-      .map(mv => {
-        const updateMv = { ...mv, remainTime: luxon.Duration.fromMillis(0) };
-        if (!!mv.over) {
-          let overTimeDuration = luxon.Duration.fromObject(mv.over);
-          const isMinus = overTimeDuration.as('milliseconds') < 0;
-          if (isMinus) {
-            overTimeDuration = luxon.Duration.fromMillis(
-              -overTimeDuration.as('milliseconds')
-            );
-          }
-          // 남은 초과근무 소진 시간이 없는가?
-          if (totalFuseOverTime <= zeroDuration) {
-            updateMv.remainTime = overTimeDuration;
-          } else if (totalFuseOverTime < overTimeDuration) {
-            updateMv.remainTime = overTimeDuration.minus(totalFuseOverTime);
-          }
-          totalFuseOverTime = totalFuseOverTime.minus(overTimeDuration);
-        }
-        return updateMv;
-      })
+    return this.overloadStore.Records
       .sort((a, b) => (a.week > b.week ? -1 : 1))
-      .map(mv => {
-        const { week } = mv;
+      .map(record => {
+        const { week } = record;
         const startDate = luxon.DateTime.fromISO(`${week}-1`).minus({
           days: 1
         });
@@ -248,40 +223,32 @@ IRecordOverloadContainerStates
         const period = `${startDate.toFormat(
           'yyyy-LL-dd'
         )} ~ ${endDate.toFormat('yyyy-LL-dd')}`;
-        // mv.over가 존재하면 luxon.Duration으로 뽑아낸다.
-        // 그리고 toFormat('hh:mm:ss')로 표시
-        // 위와 같은 작업을 remain에도 진행한다.
+        
         let overTimeStr = '-';
-        const haveOverTime = !!mv.over;
-        let isMinus = false;
-        if (!!mv.over) {
-          let overTimeDuration = luxon.Duration.fromObject(mv.over);
-          isMinus = overTimeDuration.as('milliseconds') < 0;
-          if (isMinus) {
-            overTimeDuration = luxon.Duration.fromMillis(
-              -overTimeDuration.as('milliseconds')
+
+        if (record.over) {
+          const overTimeDuration = luxon.Duration.fromObject(record.over);
+          if (overTimeDuration.as('milliseconds') < 0) {
+            overTimeStr = overTimeDuration.negate().toFormat('-hh:mm:ss');
+          } else {
+            overTimeStr = overTimeDuration.toFormat(
+              'hh:mm:ss'
             );
           }
-          overTimeStr = `${isMinus ? '-' : ''}${overTimeDuration.toFormat(
-            'hh:mm:ss'
-          )}`;
         }
         return (
           <tr
-            key={mv.week}
+            key={record.week}
             onClick={() => {
-              this.handleClickRow(mv.week);
+              this.handleClickRow(record.week);
             }}
             style={{ cursor: 'pointer' }}
           >
-            <td>{mv.week}</td>
+            <td>{record.week}</td>
             <td className="d-none d-sm-table-cell">
               <div>{period}</div>
             </td>
             <td>{overTimeStr}</td>
-            <td>{`${haveOverTime && isMinus ? '-' : ''}${mv.remainTime.toFormat(
-              'hh:mm:ss'
-            )}`}</td>
             {isAdmin.result ? (
               <td>
                 <Button
@@ -289,7 +256,7 @@ IRecordOverloadContainerStates
                   onClick={async e => {
                     e.stopPropagation();
                     if (
-                      confirm(`${mv.week} 정산을 삭제할까요?`) &&
+                      confirm(`${record.week} 정산을 삭제할까요?`) &&
                       this.loginUserStore.LoginUserInfo?.id
                     ) {
                       const resp = await this.overloadStore.deleteOverWork({
@@ -297,15 +264,15 @@ IRecordOverloadContainerStates
                           this.props.userId !== null
                             ? this.props.userId
                             : this.loginUserStore.UserInfo
-                              ? this.loginUserStore.UserInfo.id
-                              : 'none',
-                        week: mv.week,
+                            ? this.loginUserStore.UserInfo.id
+                            : 'none',
+                        week: record.week,
                         manager_id: this.loginUserStore.LoginUserInfo?.id
                       });
                       alert(
                         resp === true
-                          ? `${mv.week} 정산 삭제 완료`
-                          : `${mv.week} 정산 삭제 실패. 잠시후 다시 시도하세요.`
+                          ? `${record.week} 정산 삭제 완료`
+                          : `${record.week} 정산 삭제 실패. 잠시후 다시 시도하세요.`
                       );
                       if (resp === true) {
                         // 정산 정보 재로딩
@@ -350,7 +317,7 @@ IRecordOverloadContainerStates
 
     return this.overloadStore.FuseRecords.sort((a, b) =>
       a.date > b.date ? -1 : 1
-    ).map(mv => {
+    ).map((mv, index) => {
       const { date, use, note } = mv;
       const useDate = luxon.DateTime.fromFormat(date, 'yyyyLLdd');
       const useDateStr = useDate.toFormat('yyyy-LL-dd');
@@ -359,7 +326,7 @@ IRecordOverloadContainerStates
       const durationStr = duration.toFormat('hh:mm:ss');
       const noteStr = Util.isNotEmpty(note) ? note : '-';
       return (
-        <tr key={mv.date}>
+        <tr key={index}>
           <td>{useDateStr}</td>
           <td>{durationStr}</td>
           <td>{noteStr}</td>
@@ -491,7 +458,6 @@ IRecordOverloadContainerStates
                       <th>기록</th>
                       <th className="d-none d-sm-table-cell">기록기간</th>
                       <th>초과시간</th>
-                      <th>남은시간</th>
                       {isAdmin.result ? <th>삭제</th> : null}
                     </tr>
                   </thead>
