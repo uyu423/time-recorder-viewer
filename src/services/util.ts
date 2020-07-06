@@ -84,30 +84,19 @@ export class Util {
   public static totalRemain(
     records: IOverWork[],
     fuseRecords: IFuseOverWork[]
-  ): luxon.DurationObject | null {
+  ): number | null {
     if (this.isEmpty(records) || records.length <= 0) {
       return null;
     }
-    const storeDuration = records.reduce((acc, cur) => {
-      if (!!cur.over) {
-        const duration = luxon.Duration.fromObject(cur.over);
-        const updateAcc = acc.plus(duration);
-        return updateAcc;
-      }
-      return acc;
-    }, luxon.Duration.fromObject({ hours: 0 }));
-    const fuseDuration =
-      this.isEmpty(fuseRecords) || fuseRecords.length <= 0
-        ? luxon.Duration.fromObject({ hours: 0 })
-        : fuseRecords.reduce((acc: luxon.Duration, cur) => {
-            if (!!cur.use) {
-              const duration = luxon.Duration.fromISO(cur.use);
-              const updateAcc = acc.plus(duration);
-              return updateAcc;
-            }
-            return acc;
-          }, luxon.Duration.fromObject({ hours: 0 }));
-    return storeDuration.minus(fuseDuration).toObject();
+
+    const overMilliseconds = (records.reduce((acc, cur) => (acc + cur.over?.['milliseconds']), 0));
+    const usedMilliseconds = (fuseRecords.reduce((acc, cur) => {
+      const duration = luxon.Duration.fromISO(cur.use);
+
+      return acc + (duration.hours * 60 + duration.minutes) * 60000;
+    }, 0));
+
+    return overMilliseconds - usedMilliseconds;
   }
 
   public static isEmpty<T>(
