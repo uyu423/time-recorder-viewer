@@ -223,7 +223,7 @@ IRecordOverloadContainerStates
         const period = `${startDate.toFormat(
           'yyyy-LL-dd'
         )} ~ ${endDate.toFormat('yyyy-LL-dd')}`;
-        
+
         let overTimeStr = '-';
 
         if (record.over) {
@@ -264,8 +264,8 @@ IRecordOverloadContainerStates
                           this.props.userId !== null
                             ? this.props.userId
                             : this.loginUserStore.UserInfo
-                            ? this.loginUserStore.UserInfo.id
-                            : 'none',
+                              ? this.loginUserStore.UserInfo.id
+                              : 'none',
                         week: record.week,
                         manager_id: this.loginUserStore.LoginUserInfo?.id
                       });
@@ -313,7 +313,7 @@ IRecordOverloadContainerStates
       const duration = luxon.Duration.fromISO(cur.use);
 
       return acc + duration.hours * 60 + duration.minutes;
-    }, 0))
+    }, 0));
 
     return this.overloadStore.FuseRecords.sort((a, b) =>
       a.date > b.date ? -1 : 1
@@ -448,7 +448,10 @@ IRecordOverloadContainerStates
             </Card>
             <Card>
               <CardHeader>
-                <h2>누적된 초과 근무 {this.overloadStore.getMilisToString(Util.overMilliseconds(this.overloadStore.Records))}</h2>
+                <h2>
+                  누적된 초과 근무
+                  ({this.overloadStore.getMilisToString(Util.overMilliseconds(this.overloadStore.Records))})
+                </h2>
               </CardHeader>
               <CardBody>
                 {calSpecificWeekBtn}
@@ -467,7 +470,10 @@ IRecordOverloadContainerStates
             </Card>
             <Card>
               <CardHeader>
-                <h2>사용한 초과 근무 {this.overloadStore.getMilisToString(Util.usedMilliseconds(this.overloadStore.FuseRecords))}</h2>
+                <h2>
+                  사용한 초과 근무
+                  ({this.overloadStore.getMilisToString(Util.usedMilliseconds(this.overloadStore.FuseRecords))})
+                </h2>
               </CardHeader>
               <CardBody>
                 <Table responsive={true} className="d-sm-table">

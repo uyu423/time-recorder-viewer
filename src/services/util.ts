@@ -83,15 +83,15 @@ export class Util {
   }
 
   public static overMilliseconds(records: IOverWork[] = []): number {
-    return (records.reduce((acc, cur) => (acc + cur.over?.['milliseconds']), 0));
+    return records.reduce((acc, cur) => (acc + cur.over?.['milliseconds']), 0);
   }
 
   public static usedMilliseconds(fuseRecords: IFuseOverWork[] = []): number {
-    return (fuseRecords.reduce((acc, cur) => {
+    return fuseRecords.reduce((acc, cur) => {
       const duration = luxon.Duration.fromISO(cur.use);
 
       return acc + (duration.hours * 60 + duration.minutes) * 60000;
-    }, 0));;
+    }, 0);
   }
 
   public static totalRemain(
